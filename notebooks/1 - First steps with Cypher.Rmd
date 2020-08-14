@@ -12,23 +12,6 @@ output:
 
 This notebooks assumes a Neo4J instance running and accessible at http://localhost:7474.
 
-A convenient way to do so is to pull neo4j docker image and run it locally:
-
-```bash
-docker pull neo4j
-docker run --name neo4j -p7474:7474 -p7687:7687 --env NEO4J_AUTH=neo4j/test -d neo4j
-```
-
-When doing this on Windows you may also need to run with following parameters:
-
-```bash
---env NEO4J_dbms_connector_https_advertised__address="localhost:7473"
---env NEO4J_dbms_connector_http_advertised__address="localhost:7474"
---env NEO4J_dbms_connector_bolt_advertised__address="localhost:7687"
-```
-
-Also, free desktop version for Windows users might be easier to use.
-
 There exists an easy way to interact with neo4j using R thanks to the neo4r library. We will use it along this notebook (and also some other useful libraries).
 
 ```{r echo=T}
