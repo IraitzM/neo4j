@@ -176,7 +176,7 @@ call_neo4j(q,con=con)
 ```
 
 ![](images/14.png)
-Curious enough, Ms. Andrenyi's husband, Count Rudolph Andrenyi also is traveling in the same train.
+Curious enough, Mrs. Andrenyi's husband, Count Rudolph Andrenyi also is traveling in the same train.
 
 ```{r}
 q<-"
@@ -198,7 +198,7 @@ call_neo4j(q,con=con)
 
 ![](images/15.png)
 
-But count and countess Andrenyi travels on a separate compartments. He is in first class coach number 4.
+But count and countess Andrenyi travel on a separate compartments. He is in first class coach number 4.
 
 ```{r}
 q<-"
@@ -215,7 +215,7 @@ call_neo4j(q,con=con)
 
 ![](images/16.png)
 
-So it seems many people is related to that Armstrong familly. Has that anything to do with the victim?
+So it seems many people is related to that Armstrong family. Has that anything to do with the victim?
 
 ```{r}
 q<-"
@@ -267,3 +267,73 @@ MERGE (v)-[:RELATED]->(d)" %>% call_neo4j(con=con)
 
 What a mess!
 
+# Model inspection
+
+So far we have played a little bit with Neo4J and we have seen some relevant aspects of it. For example, that no schema definition is enforced, at least by default.
+
+The two main object types are nodes.
+
+```{r}
+"MATCH (n) RETURN *" %>% call_neo4j(con=con)
+```
+
+As can be seen, all nodes are part of the same type. Using LABEL we can set a logical grouping as it would happen with different TABLES in RDBMS so similar schema are expected in those cases.
+
+```{r}
+"MATCH (n:PERSON) RETURN *" %>% call_neo4j(con=con)
+```
+
+```{r}
+"MATCH (n:PERSON:SUSPECT) RETURN *" %>% call_neo4j(con=con)
+```
+```{r}
+"MATCH (n:COACH) RETURN *" %>% call_neo4j(con=con)
+```
+
+But of course there is no schema officially imposed, that's why we could keep on adding properties to different nodes no matter what label they had.
+
+![](images/20.png)
+Same thing happens with relationships.
+
+```{r}
+"MATCH ()-[r]-() RETURN TYPE(r), COUNT(*)" %>% call_neo4j(con=con, output='json') %>% convert()
+```
+Thanks to those labels and types we can just attack the subgraph we are interested in targeting the minimum amount of information two wrangle. Information that doesn't need to be denormalized as every instance is already linked to the rest of the information related to it. Lets take for example every suspect that visited victim's coach half an hour before his death.
+
+![](images/21.png)
+
+So if we ask to EXPLAIN or PROFILE the query we should see the real impact of our query in the DBMS.
+
+```{r}
+"EXPLAIN MATCH (v:VICTIM)-[]->(c:COACH)<-[i:VISITED]-(s:SUSPECT) 
+WHERE duration.inSeconds(i.time,v.deadtime).minutes < 30 RETURN *"
+```
+
+![](images/23.png)
+```{r}
+"PROFILE MATCH (v:VICTIM)-[]->(c:COACH)<-[i:VISITED]-(s:SUSPECT) 
+WHERE duration.inSeconds(i.time,v.deadtime).minutes < 30 RETURN *"
+```
+
+![](images/22.png)
+
+```{r}
+"MATCH (v:VICTIM)-[]->(c:COACH)<-[i:VISITED]-(s:SUSPECT) 
+WHERE duration.inSeconds(i.time,v.deadtime).minutes < 30 RETURN s.name" %>% call_neo4j(con=con)
+```
+It doesn't look good for Pierre... Let's clear everything up to finish.
+
+# Clear everything
+
+Given that nodes are attached to other nodes via relations, Neo4J doesn't allow us to remove a node living its relations hanging.
+
+```{r}
+"MATCH (v:VICTIM)
+DELETE v" %>% call_neo4j(con=con)
+```
+To clear everything up we will need to also DETACH those relationships.
+
+```{r}
+"MATCH (node)
+DETACH DELETE node" %>% call_neo4j(con=con)
+```
