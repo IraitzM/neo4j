@@ -21,7 +21,7 @@ library(magrittr)
 
 # Let's start
 
-Now that we are set, we will use Neo4J in order to model the evidences of a crime that has occurred while sleeping at the Orient Express.
+Now that we are set, we will use Neo4J in order to model the evidences of a crime that was committed while sleeping at the Orient Express.
 
 ![](images/banner.png)
 
@@ -34,7 +34,7 @@ con <- neo4j_api$new(url = "http://localhost:7474", user = "neo4j", password = "
 Now that our connection is established we can start by defining the context: our train. There are twelve train coaches and given that the suspect is still inside the train, everyone inside those is a suspect. Everyone except the victim.
 
 ```{r}
-q<-"CREATE (:VICTIM :PERSON {name : 'Samuel Edward Ratchett', country: 'USA'})" %>% call_neo4j(con)
+"CREATE (:VICTIM :PERSON {name : 'Samuel Edward Ratchett', country: 'USA'})" %>% call_neo4j(con)
 "CREATE (:COACH {number: 7, class : 'first'})" %>% call_neo4j(con)
 ```
 
@@ -46,7 +46,7 @@ q<-"CREATE (:VICTIM :PERSON {name : 'Samuel Edward Ratchett', country: 'USA'})" 
 
 ![](images/2.png)
 
-While investigating we have discovered a pocket watch stopped at 1:15AM, approximately the same time the night before some incident happened on that coach. According to the conductor Pierre Michel who visited Mr. Rachett at 00:37AM approximately due to some noise at the compartment.
+While investigating we have discovered a pocket watch stopped at 1:00AM. That's the approximate time some incident happened the night before on that coach, according to the conductor (Pierre Michel) who visited Mr. Rachett exactly at 00:37AM. Other passengers heard noises coming out of coach number 7.
 
 ```{r}
 "MATCH (v:VICTIM) SET v.deadtime = localtime('01:00:00.000')" %>% call_neo4j(con)
@@ -66,7 +66,7 @@ While investigating we have discovered a pocket watch stopped at 1:15AM, approxi
 
 ![](images/5.png)
 
-We also found a female napkin with an *H* embroidered, a pipe cleaner and the button of the conductor jacket.
+We also found a female napkin with an *H* embroidered, a pipe cleaner and a jacket button. Looks similar to the ones on conductor's jacket.
 
 ```{r}
 "MATCH (c:CONDUCTOR) SET c:SUSPECT " %>% call_neo4j(con)
@@ -94,7 +94,7 @@ call_neo4j(q,con=con)
 
 ![](images/8.png)
 
-Mrs. Hubbard's second daughter also travels inside the same train, coach 5. She is now Helena Andrenyi. 
+Mrs. Hubbard's second daughter also travels inside the same train, coach number 5. She is now Helena Andrenyi. 
 
 ```{r}
 "CREATE (:SUSPECT:PERSON {name : 'Helena Andrenyi', gender: 'female'})" %>% call_neo4j(con)
@@ -115,7 +115,7 @@ call_neo4j(q,con=con)
 
 ![](images/10.png)
 
-Poor family. Lets continue with the rest of the suspects... in particular those with an H on their names. There is a female on the second class, Hildegarde Schmidt.
+Poor family. Lets continue with the rest of the suspects... in particular those with an H on their names. There is a female on second class, Hildegarde Schmidt.
 
 ```{r}
 "CREATE (:SUSPECT:PERSON {name : 'Hildegarde Schmidt', gender: 'female', country : 'GERMANY', profession : 'cook'})" %>% call_neo4j(con)
@@ -123,7 +123,7 @@ Poor family. Lets continue with the rest of the suspects... in particular those 
 
 ![](images/11.png)
 
-Funny story, she was the cook of the Armstrong family. What are the odds! She also remembers the poor Susanne, the family maid who was found guilty and after hanging herself the exculpated her due to the lack of evidences and finding that an American wealthy man called Casetti was found guilty. She also remember Pierre, the conductor, visiting his daughter Susanne at the Armstrong family house.
+Funny story, she was the cook of the Armstrong family. What are the odds! She also remembers the poor Susanne, the family maid who was found guilty and after hanging herself she was exculpated due to the lack of evidences. Also, an American wealthy man called Casetti was found guilty. She also remembers Pierre, the conductor, visiting his daughter Susanne at the Armstrong family house. Interesting...
 
 ```{r}
 "CREATE (:PERSON {name : 'Susanne', gender: 'female', country : 'FRANCE', profession : 'maid'})" %>% call_neo4j(con)
@@ -140,7 +140,7 @@ call_neo4j(q,con=con)
 
 ![](images/13.png)
 
-What a coincidence. So the two ladies with an *H* in their names are in subsequent coaches to the victim. The only female suspect with an H in her name is siting on a second class coach.
+What a coincidence. So the two ladies with an *H* in their names are in subsequent coaches to the victim. The only suspect left with an *H* in her name is the former cook siting on a second class coach.
 
 ```{r}
 q<-"
@@ -176,7 +176,7 @@ call_neo4j(q,con=con)
 ```
 
 ![](images/14.png)
-Curious enough, Mrs. Andrenyi's husband, Count Rudolph Andrenyi also is traveling in the same train.
+Curious enough, Mrs. Andrenyi's husband, Count Rudolph Andrenyi, is also traveling in the same train.
 
 ```{r}
 q<-"
@@ -198,7 +198,7 @@ call_neo4j(q,con=con)
 
 ![](images/15.png)
 
-But count and countess Andrenyi travel on a separate compartments. He is in first class coach number 4.
+But count and countess Andrenyi travel on separate compartments. He is in first class coach number 4.
 
 ```{r}
 q<-"
@@ -269,15 +269,15 @@ What a mess!
 
 # Model inspection
 
-So far we have played a little bit with Neo4J and we have seen some relevant aspects of it. For example, that no schema definition is enforced, at least by default.
+So far we have played a little bit with Neo4J and we have seen some relevant aspects of it. For example, that no schema definition is enforced, by default at least.
 
-The two main object types are nodes.
+One of the main object types is nodes.
 
 ```{r}
 "MATCH (n) RETURN *" %>% call_neo4j(con=con)
 ```
 
-As can be seen, all nodes are part of the same type. Using LABEL we can set a logical grouping as it would happen with different TABLES in RDBMS so similar schema are expected in those cases.
+As can be seen, all nodes are part of the same type. Using LABELs we can set a logical grouping as it would happen with different TABLES in RDBMS so similar schema is expected in those cases. Actually, same instance can be placed in different TABLE groupings as it happens in our case with PERSON and SUSPECT *tables*.
 
 ```{r}
 "MATCH (n:PERSON) RETURN *" %>% call_neo4j(con=con)
@@ -290,15 +290,18 @@ As can be seen, all nodes are part of the same type. Using LABEL we can set a lo
 "MATCH (n:COACH) RETURN *" %>% call_neo4j(con=con)
 ```
 
-But of course there is no schema officially imposed, that's why we could keep on adding properties to different nodes no matter what label they had.
+But of course there is no schema officially imposed, that's why we could keep on adding properties to different nodes no matter what LABEL they had.
 
 ![](images/20.png)
-Same thing happens with relationships.
+
+Same thing happens with relationships. In this case relationships are separated into TYPEs the same way nodes are separated into LABELs.
 
 ```{r}
 "MATCH ()-[r]-() RETURN TYPE(r), COUNT(*)" %>% call_neo4j(con=con, output='json') %>% convert()
 ```
-Thanks to those labels and types we can just attack the subgraph we are interested in targeting the minimum amount of information two wrangle. Information that doesn't need to be denormalized as every instance is already linked to the rest of the information related to it. Lets take for example every suspect that visited victim's coach half an hour before his death.
+Thanks to those labels and types we can just attack the subgraph we are interested in, thus targeting the minimum amount of information to wrangle. Information that doesn't need to be denormalized as every instance is already linked to the rest of the information related to it.
+
+Let's take for example every suspect that visited victim's coach half an hour before his death.
 
 ![](images/21.png)
 
@@ -325,7 +328,7 @@ It doesn't look good for Pierre... Let's clear everything up to finish.
 
 # Clear everything
 
-Given that nodes are attached to other nodes via relations, Neo4J doesn't allow us to remove a node living its relations hanging.
+Given that nodes are attached to other nodes via relationships, Neo4J doesn't allow us to remove a node leaving its relationships hanging.
 
 ```{r}
 "MATCH (v:VICTIM)

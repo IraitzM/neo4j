@@ -10,7 +10,7 @@ output:
 
 We will use this notebook to import the famous Northwind database into Neo4J. Of course, this example will help you understand how a relational database can be converted into a graph.
 
-We will focus in sales department.
+We will focus in the sales department.
 
 ![](images/relational.png)
 
@@ -18,7 +18,7 @@ And will try to define those rows according to following ontology.
 
 ![](images/graph.png)
 
-A local connection will be used.
+Just like in the other example, a local connection will be used.
 
 ```{r}
 library(xml2)
@@ -39,7 +39,9 @@ First we should notice that each row will be transformed into a NODE of a given 
 CREATE (:Customer {companyName: row.CompanyName, customerID: row.CustomerID, fax: row.Fax, phone: row.Phone});" %>% call_neo4j(con)
 ```
 
-For those tables where big volume is expected, PRIODIC COMMITS can be sent to the database instead of trying to push all the information at once.
+Using header information from the CSV file (if it exists) it is easy to identify which column value is placed inside each node property. 
+
+For those tables where big volume is expected, PERIODIC COMMITS can be sent to the database instead of trying to push all the information at once.
 
 ### Products
 
@@ -48,6 +50,8 @@ For those tables where big volume is expected, PRIODIC COMMITS can be sent to th
 LOAD CSV WITH HEADERS FROM 'https://raw.githubusercontent.com/IraitzM/neo4j/master/data/products.csv' AS row
 CREATE (:Product {productName: row.ProductName, productID: row.ProductID, unitPrice: toFloat(row.UnitPrice)});" %>% call_neo4j(con)
 ```
+
+It is important to pay attention to value conversions. Everything in a CSV is a text value or string so in case it is a numeric representation, explicit conversions will be needed (toFloat in this case).
 
 ### Employees
 
@@ -67,9 +71,9 @@ MERGE (order:Order {orderID: row.OrderID}) ON CREATE SET order.shipName =  row.S
 
 ![](images/24.png)
 
-Now that all nodes have already been created, we will need to link them. Relationship information in normilized schemes can be found as foreign key relations resolved as table columns or in case of many-to-many relationships as a separate table.
+Now that all nodes have already been created, we will need to link them. Relationship information in normilized schemes can be found as foreign key relations resolved as table columns or in case of many-to-many relationships as a table holding both foreign keys.
 
-In our model, Order-Details is the link table used to relate Products with Orders (M:N) where some additional information can be found that will be added as properties to the relation.
+In our model, Order-Details is the link table used to relate Products with Orders (M:N) where some additional information can be found as well. This information will be added as properties to the relationship.
 
 ### Order-Product relationship
 
@@ -81,8 +85,6 @@ MATCH (product:Product {productID: row.ProductID})
 MERGE (order)-[pu:PRODUCT]->(product)
 ON CREATE SET pu.unitPrice = toFloat(row.UnitPrice), pu.quantity = toFloat(row.Quantity);" %>% call_neo4j(con)
 ```
-
-As it can be seen, flat files are always read as text so in the case of numeric information these will need to be interpreted as such.
 
 ### Employee-Order relationship
 
