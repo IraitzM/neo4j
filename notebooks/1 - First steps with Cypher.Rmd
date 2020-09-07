@@ -233,7 +233,7 @@ call_neo4j(q,con=con)
 
 ![](images/17.png)
 
-How many people is related to them and how distant is their relationship?
+How many people are related to them and how distant is their relationship?
 
 ```{r}
 q<-"
@@ -244,7 +244,7 @@ ORDER BY degree DESC"
 j <- call_neo4j(q,con=con, type="row", output="json")
 j
 ```
-That's nasty.
+That's nasty. We can fix how R shows the information using a function.
 
 ```{r}
 convert <- function(json){
