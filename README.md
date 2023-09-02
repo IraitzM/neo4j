@@ -5,8 +5,8 @@ This repository holds some simple R code examples and notebooks to interact betw
 For everything to work it is assumed a local Neo4J installation either using docker:
 
 ```bash
-docker pull neo4j
-docker run --name neo4j -p7474:7474 -p7687:7687 --env NEO4J_AUTH=neo4j/test -d neo4j
+docker pull neo4j:4.3.4
+docker run --name neo4j -p7474:7474 -p7687:7687 --env NEO4J_AUTH=neo4j/test -d neo4j:4.3.4
 ```
 
 When doing this on Windows you may also need to run with following parameters:
